@@ -17,6 +17,11 @@ public class TrainMovement : MonoBehaviour
     private Vector3 spawnPosition;
     private Vector3 moveDirection;
 
+    private void Awake()
+    {
+        this.enabled = false;
+    }
+
     private void Start()
     {
         // Получите все рельсы (узлы) из контейнера RailContainer

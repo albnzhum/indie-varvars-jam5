@@ -47,4 +47,9 @@ public class Speedometer : MonoBehaviour
     {
         Time.timeScale = 1;
     }
+
+    public void PlayButton()
+    {
+        train.enabled = true;
+    }
 }
