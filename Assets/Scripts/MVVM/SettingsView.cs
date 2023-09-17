@@ -30,7 +30,7 @@ public class SettingsView : MonoBehaviour, INotifyPropertyChanged
     {
         musicSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
         soundSlider.onValueChanged.AddListener(OnSoundVolumeChanged);
-        languageChoice.onValueChanged.AddListener(OnLanguageValueChanged);
+        //languageChoice.onValueChanged.AddListener(OnLanguageValueChanged);
     }
 
     private void OnSoundVolumeChanged(float arg0)
