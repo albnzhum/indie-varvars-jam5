@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class TrainMovement : MonoBehaviour
@@ -9,8 +11,23 @@ public class TrainMovement : MonoBehaviour
     public float maxSpeed = 10.0f;
     public float rotationSpeed = 5.0f;
 
-    public List<Transform> waypoints; // Узлы системы путей (места, куда должен двигаться поезд)
+    public Transform railContainer;
+    private List<Transform> waypoints; // Узлы системы путей (места, куда должен двигаться поезд)
     private int currentWaypointIndex = 0;
+    private Vector3 spawnPosition;
+    private Vector3 moveDirection;
+
+    private void Start()
+    {
+        // Получите все рельсы (узлы) из контейнера RailContainer
+        waypoints = new List<Transform>();
+        foreach (Transform child in railContainer)
+        {
+            waypoints.Add(child);
+        }
+
+       // spawnPosition = transform.position;
+    }
 
     private void Update()
     {
@@ -20,34 +37,25 @@ public class TrainMovement : MonoBehaviour
             return;
         }
 
-        // Перемещение к текущему узлу
-        Vector3 targetPosition = waypoints[currentWaypointIndex].position;
-        Vector3 moveDirection = (targetPosition - transform.position).normalized;
-        
-        // Ускоряем поезд
+        //Vector3 targetPosition = waypoints[currentWaypointIndex].position;
+        Vector3 targetPosition = new Vector3(0.46f, 1.3f, waypoints[currentWaypointIndex].position.z);
+
+        moveDirection = (targetPosition - transform.position).normalized;
+
         speed += acceleration * Time.deltaTime;
         speed = Mathf.Clamp(speed, 0, maxSpeed);
 
-        // Перемещаем поезд
         transform.position += moveDirection * speed * Time.deltaTime;
 
-        // Если поезд достиг текущего узла, переходим к следующему
         if (Vector3.Distance(transform.position, targetPosition) < 0.1f)
         {
+            Debug.Log(currentWaypointIndex);
             currentWaypointIndex++;
-
-            // Проверка, достиг ли поезд последнего узла, и перезапуск маршрута
             if (currentWaypointIndex >= waypoints.Count)
             {
                 currentWaypointIndex = 0;
             }
         }
     }
-
-    // Метод для установки узлов системы путей
-    public void SetWaypoints(List<Transform> newWaypoints)
-    {
-        waypoints = newWaypoints;
-        currentWaypointIndex = 0;
-    }
+    
 }

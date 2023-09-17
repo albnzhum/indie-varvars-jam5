@@ -4,16 +4,19 @@ using UnityEngine;
 
 public class RailSegment : MonoBehaviour
 {
-    private bool isPassed = false;
+    public Transform startPoint;
+    public Transform endPoint;
+    public GameObject obstacle;
 
-    // Метод для проверки, прошел ли поезд через этот сегмент
-    public bool IsPassed(Vector3 trainPosition)
+    public void ActivateObstacle()
     {
-        if (!isPassed && trainPosition.x > transform.position.x)
-        {
-            isPassed = true;
-            return true;
-        }
-        return false;
+        DeactiveObstacle();
+        obstacle.SetActive(true);
     }
+
+    public void DeactiveObstacle()
+    {
+        obstacle.SetActive(false);
+    }
+
 }

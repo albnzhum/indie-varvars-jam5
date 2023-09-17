@@ -1,63 +1,72 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using Unity.VisualScripting;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 public class MapGenerator : MonoBehaviour
 {
-    public GameObject[] trackPrefabs;
-    public Transform train; 
-    public float spawnDistance = 10f; 
-    public int maxSegments = 10; 
+    public Camera mainCamera;
+    public Transform startPoint;
+    public RailSegment prefab;
+    public float movingSpeed = 12;
+    public int tilesToPreSpawn = 15;
 
-    private Vector3 spawnPosition;
-    private int segmentsSpawned = 0;
+    private List<RailSegment> spawnedTiles = new List<RailSegment>();
+    private int nextTileToActivate = -1;
+    [HideInInspector] 
+    public bool gameOver = false;
 
-    private void Start()
+    private static bool gameStarted = false;
+    private float score = 0;
+
+    public static MapGenerator _instance;
+
+    private void Awake()
     {
-        spawnPosition = train.position;
-        SpawnInitialSegments();
-        if (Waypoints.waypoints == null)
+        _instance = this;
+        Vector3 spawnPosition = startPoint.position;
+        for (int i = 0; i < tilesToPreSpawn; i++)
         {
-            Waypoints.waypoints = new List<Transform>();
+            // Only modify the Z component of spawnPosition
+            spawnPosition.z -= prefab.startPoint.localPosition.z;
+
+            // Use the modified spawnPosition to instantiate the tile
+            RailSegment spawnedTile = Instantiate(prefab, spawnPosition, transform.rotation) as RailSegment;
+        
+            // Update the spawnPosition for the next tile
+            spawnPosition.z = spawnedTile.endPoint.position.z;
+            spawnedTile.transform.SetParent(transform);
+            spawnedTiles.Add(spawnedTile);
         }
     }
 
     private void Update()
     {
-        if (Vector3.Distance(train.position, spawnPosition) > spawnDistance)  
+        if (!gameOver && gameStarted)
         {
-            SpawnInitialSegments();
-            DestroyOldestSegment();
+            // Move only along the Z-axis, setting X and Y components to zero
+            Vector3 moveDirection = -spawnedTiles[0].transform.forward;
+            moveDirection.x = 0;
+            moveDirection.y = 0;
+        
+            transform.Translate(moveDirection * (Time.deltaTime * (movingSpeed + (score/500))), Space.World);
+            score += Time.deltaTime * movingSpeed;
         }
-    }
 
-    private void SpawnInitialSegments()
-    {
-        while (segmentsSpawned < maxSegments)
+        if (mainCamera.WorldToViewportPoint(spawnedTiles[0].endPoint.position).z < 0)
         {
-            SpawnSegment();
-            segmentsSpawned++;
-        }
-    }
-    
-    private void SpawnSegment()
-    {
-        GameObject newTrack = Instantiate(trackPrefabs[0], spawnPosition, Quaternion.identity);
-        spawnPosition.x += newTrack.GetComponentInChildren<Renderer>().bounds.size.x;
-        //Waypoints.waypoints.Add(newTrack.transform);
-    }
-
-    private void DestroyOldestSegment()
-    {
-        GameObject[] segments = GameObject.FindGameObjectsWithTag("TrackSegment");
-        foreach (GameObject segment in segments)
-        {
-            RailSegment railSegment = segment.GetComponent<RailSegment>();
-            if (railSegment != null && railSegment.IsPassed(train.position))
-            {
-                Destroy(segment);
-                segmentsSpawned--;
-            }
+            RailSegment railTmp = spawnedTiles[0];
+            spawnedTiles.RemoveAt(0);
+            Vector3 temp = spawnedTiles[spawnedTiles.Count - 1].endPoint.position -
+                                         railTmp.startPoint.localPosition;
+            railTmp.transform.position = new Vector3(startPoint.position.x, startPoint.position.y, temp.z);
+            railTmp.ActivateObstacle();
+            spawnedTiles.Add(railTmp);
         }
     }
 }
