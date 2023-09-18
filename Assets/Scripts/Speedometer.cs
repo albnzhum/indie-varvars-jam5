@@ -12,6 +12,7 @@ public class Speedometer : MonoBehaviour
     public float minSpeed;
     public float maxSpeed;
     public GameObject warning;
+    public Button playButton;
     
     private void Update()
     {
@@ -51,5 +52,7 @@ public class Speedometer : MonoBehaviour
     public void PlayButton()
     {
         train.enabled = true;
+        playButton.gameObject.SetActive(false);
+        
     }
 }
